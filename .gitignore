@@ -4,3 +4,9 @@
 bin
 include
 lib
+
+\.idea/
+
+image_mosaic\.egg-info/
+
+mosaic/__pycache__/
