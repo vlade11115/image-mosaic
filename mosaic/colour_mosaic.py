@@ -7,11 +7,11 @@ from operator import itemgetter
 
 from PIL import Image
 
-PIXEL_SIZE = 64
+random.seed(42)
+PIXEL_SIZE = 2 ** 6
 
 
 def distance(a, b):
-    assert len(a) == len(b)
     dist = 0
 
     for left, right in zip(a, b):
@@ -32,21 +32,10 @@ def average_colour(image, pixels):
     return colours
 
 
-def generate_mosaic(image_dir, input_image, out_path_or_file):
-    images = []
+def generate_mosaic(tiles, image, out_path_or_file):
+    for tile in tiles:
+        tile['colour'] = average_colour(tile['image'], tile['pixels'])
 
-    for name in glob.iglob(image_dir):
-        path = os.path.join(image_dir, name)
-        image = Image.open(path)
-        image = image.resize((PIXEL_SIZE, PIXEL_SIZE))
-        pixels = image.load()
-        images.append({
-            "image": image,
-            "pixels": pixels,
-            "colour": average_colour(image, pixels),
-        })
-
-    image = Image.open(input_image)
     pixels = image.load()
     w, h = image.size
 
@@ -58,10 +47,10 @@ def generate_mosaic(image_dir, input_image, out_path_or_file):
 
     for x in range(w):
         for y in range(h):
-            for i in images:
+            for i in tiles:
                 i["distance"] = distance(pixels[x, y], i["colour"])
 
-            best_matches = sorted(images, key=itemgetter("distance"))
+            best_matches = sorted(tiles, key=itemgetter("distance"))
             choice = random.choice(best_matches[0:5])
             output_image.paste(choice["image"], (pos_w, pos_h))
             pos_h += PIXEL_SIZE
@@ -73,11 +62,34 @@ def generate_mosaic(image_dir, input_image, out_path_or_file):
     output_image.save(out_path_or_file)
 
 
+def tile_image(image):
+    image = image.resize((PIXEL_SIZE, PIXEL_SIZE))
+    pixels = image.load()
+    return {
+        "image": image,
+        "pixels": pixels,
+    }
+
+
+def load_images(image_dir):
+    images = []
+
+    for name in glob.iglob(image_dir):
+        path = os.path.join(image_dir, name)
+        image = Image.open(path)
+
+        images.append(tile_image(image))
+
+    return images
+
+
 def main():
     image_dir = os.path.join(sys.argv[1], '*.jpg')
     input_image = sys.argv[2]
     input_path = sys.argv[3]
-    generate_mosaic(image_dir, input_image, input_path)
+    image = Image.open(input_image)
+
+    generate_mosaic(load_images(image_dir), image, input_path)
 
 
 if __name__ == "__main__":

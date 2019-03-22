@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name='image-mosaic',
-    version='0.0.1',
+    version='0.0.2',
     packages=setuptools.find_packages(),
     url='https://github.com/vlade11115/image-mosaic',
     license='BSD 3-Clause License',
